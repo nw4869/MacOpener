@@ -11,7 +11,7 @@ def singleton(cls, *args, **kw):
     return _singleton
 
 
-@singleton
+# @singleton
 class MacStore:
     def get_macs(self):
         raise NotImplementedError
@@ -19,7 +19,7 @@ class MacStore:
     def set_macs(self, macs):
         raise NotImplementedError
 
-    def add_mac(self, mac):
+    def add_mac(self, mac, isp):
         raise NotImplementedError
 
     def remove_mac(self, mac):
@@ -28,9 +28,12 @@ class MacStore:
     def contains(self, mac):
         raise NotImplementedError
 
+    def find(self, mac, isp):
+        pass
+
 
 @singleton
-class MacStoreByCsv:
+class MacStoreByCsv(MacStore):
     def __init__(self, path='macs.csv'):
         self.path = path
 
@@ -46,3 +49,12 @@ class MacStoreByCsv:
             macs.append((mac, isp))
         file.close()
         return macs
+
+    def add_mac(self, mac, isp):
+        if not os.path.exists(self.path):
+            return
+        with open(self.path, 'a') as f:
+            mac = mac.replace('-', ':').upper().strip()
+            mac_isp = mac + ', ' + isp + '\n'
+            f.write(mac_isp)
+            print(mac_isp, 'saved')
