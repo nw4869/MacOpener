@@ -18,5 +18,6 @@ optional arguments:
   -d DELAY, --delay DELAY
   
   
-  #Note
-  只能在宿舍使用,网段大概为（10.21.0.0/16),其他网段无效.
+# Note
+  1. 只能在宿舍使用,网段大概为（10.21.0.0/16),其他网段无效.
+  2. 如果程序获取ip失败，可以使用参数指定本机ip：--ip xx.xx.xx.xx

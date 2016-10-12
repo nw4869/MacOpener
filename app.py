@@ -37,11 +37,11 @@ def home():
         if not isp.isalnum() or int(isp) > 3:
             return html + '<label>error: sp</label>'
 
-        mac = mac.replace('-', ':').strip()
+        mac = mac.replace('-', ':').upper().strip()
         if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
             return html + '<label>mac error</label>'
 
-        mac_opener.open(mac.upper(), int(isp))
+        mac_opener.open(mac, int(isp))
         print(mac, isp)
         if save:
             mac_store.add_mac(mac, isp)
@@ -59,10 +59,14 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--delay', default=0)
     args = parser.parse_args()
 
-    mac_store = MacStoreByCsv()
-    mac_opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip)
-    action = MacsOpener(mac_store, mac_opener)
-    timer = RepeatTimer(args.interval, action.do, args.delay)
-    timer.setDaemon(True)
-    timer.start()
-    app.run()
+    try:
+        mac_store = MacStoreByCsv()
+        mac_opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip)
+        action = MacsOpener(mac_store, mac_opener)
+        timer = RepeatTimer(args.interval, action.do, args.delay)
+        timer.setDaemon(True)
+        timer.start()
+        app.run(args.listen, args.port)
+    except AssertionError as e:
+        print(e)
+        exit(1)
