@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MAC opener for GUET by nightwind</title>
+    <style>
+        .center {
+            text-align: center;
+        }
+
+        .center > div, .center > table {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        div {
+            margin: 8px auto;
+        }
+
+        .error {
+            color: #d8000c;
+        }
+    </style>
+</head>
+<body>
+<div class="center">
+    <div>
+        <h2>MAC opener for GUET</h2>
+        <form action="/" method="post">
+            <div><label for="mac">MAC: </label><input name="mac" id="mac"/></div>
+            <div>
+                <label>
+                    isp:
+                    <select name="isp">
+                        <option value="1">联通</option>
+                        <option value="2">电信</option>
+                        <option value="3">移动</option>
+                    </select>
+                </label>
+            </div>
+            <div>
+                <input type="checkbox" id="save" name="save" value="save"/>
+                <label for="save">save (auto submit every 300 seconds.)</label>
+            </div>
+            <button type="submit">submit</button>
+        </form>
+        <div id="error" class="error">
+            {% if error %}
+                <label id="error">error: {{ error|safe }}</label>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

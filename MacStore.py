@@ -56,6 +56,6 @@ class MacStoreByCsv(MacStore):
             return
         with open(self.path, 'a') as f:
             mac = mac.replace('-', ':').upper().strip()
-            mac_isp = mac + ', ' + isp + '\n'
-            f.write(mac_isp)
+            mac_isp = mac + ', ' + isp
+            f.write(mac_isp + '\n')
             print(mac_isp, 'saved')

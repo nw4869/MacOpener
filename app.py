@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, redirect, url_for
 from flask import request
 from MacOpener import MacOpener
 import re
@@ -10,42 +10,68 @@ import argparse
 app = Flask(__name__)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def home():
-    html = '''<form action="/" method="post">
-                    <label>mac</label>
-                    <input name="mac" id="mac"/>
-                    <select name="isp">
-                        <option value="1">联通</option>
-                        <option value="2">电信</option>
-                        <option value="3">移动</option>
-                    </select>
-                    <input type="checkbox" id="save" name="save" value="save"/>
-                    <label>save</label>
-                    <button type="submit">ok</button>
-                </form>'''
-    if request.method == 'GET':
-        return html
-    elif request.method == 'POST':
-        mac = request.form.get('mac')
-        isp = request.form.get('isp')
-        save = 'save' in request.form
+    return render_template('index.html', error=request.args.get('error'))
 
-        if mac is None or len(mac) == 0 or isp is None:
-            return html + '<label>error: MAC or isp is None</label>'
 
-        if not isp.isalnum() or int(isp) > 3:
-            return html + '<label>error: isp</label>'
+@app.route('/', methods=['POST'])
+def submit():
+    mac = request.form.get('mac')
+    isp = request.form.get('isp')
+    save = 'save' in request.form
 
-        mac = mac.replace('-', ':').upper().strip()
-        if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
-            return html + '<label>wrong format of MAC (should be HH:HH:HH:HH:HH:HH or HH-HH-HH-HH-HH-HH)</label>'
+    if mac is None or len(mac) == 0 or isp is None:
+        return redirect(url_for('home', error='MAC or isp is None'))
 
-        mac_opener.open(mac, int(isp))
-        print(mac, isp)
-        if save:
-            mac_store.add_mac(mac, isp)
-        return html + 'ok!'
+    if not isp.isalnum() or int(isp) > 3:
+        return render_template('index.html', error='isp is incorrect')
+
+    mac = mac.replace('-', ':').upper().strip()
+    if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
+        return render_template('index.html',
+                               error='wrong format of MAC (should be HH:HH:HH:HH:HH:HH or HH-HH-HH-HH-HH-HH)')
+
+    mac_opener.open(mac, int(isp))
+    print(mac, isp)
+    if save:
+        mac_store.add_mac(mac, isp)
+    return render_template('index.html')
+
+    # html = '''<form action="/" method="post">
+    #                 <label>mac</label>
+    #                 <input name="mac" id="mac"/>
+    #                 <select name="isp">
+    #                     <option value="1">联通</option>
+    #                     <option value="2">电信</option>
+    #                     <option value="3">移动</option>
+    #                 </select>
+    #                 <input type="checkbox" id="save" name="save" value="save"/>
+    #                 <label>save</label>
+    #                 <button type="submit">ok</button>
+    #             </form>'''
+    # if request.method == 'GET':
+    #     return html
+    # elif request.method == 'POST':
+    #     mac = request.form.get('mac')
+    #     isp = request.form.get('isp')
+    #     save = 'save' in request.form
+    #
+    #     if mac is None or len(mac) == 0 or isp is None:
+    #         return html + '<label>error: MAC or isp is None</label>'
+    #
+    #     if not isp.isalnum() or int(isp) > 3:
+    #         return html + '<label>error: isp</label>'
+    #
+    #     mac = mac.replace('-', ':').upper().strip()
+    #     if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
+    #         return html + '<label>wrong format of MAC (should be HH:HH:HH:HH:HH:HH or HH-HH-HH-HH-HH-HH)</label>'
+    #
+    #     mac_opener.open(mac, int(isp))
+    #     print(mac, isp)
+    #     if save:
+    #         mac_store.add_mac(mac, isp)
+    #     return html + 'ok!'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MAC opener for GUET by nightwind')
