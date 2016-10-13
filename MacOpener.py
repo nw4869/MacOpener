@@ -55,7 +55,7 @@ Please specify the IP address thought command-line argument using --ip'
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MAC opener for GUET by nightwind')
     parser.add_argument('-s', '--server', default='172.16.1.1')
-    parser.add_argument('-sp', '--server port', dest='server_port', default=20015)
+    parser.add_argument('-sp', '--server port', dest='server_port', type=int, default=20015)
     parser.add_argument('-i', '--ip')
     parser.add_argument('mac')
     parser.add_argument('isp', type=int, choices=[1, 2, 3])
