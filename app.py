@@ -27,19 +27,19 @@ def home():
     if request.method == 'GET':
         return html
     elif request.method == 'POST':
-        mac = request.form['mac']
-        isp = request.form['sp']
+        mac = request.form.get('mac')
+        isp = request.form.get('isp')
         save = 'save' in request.form
 
-        if mac is None or isp is None:
-            return html + '<label>error: not none</label>'
+        if mac is None or len(mac) == 0 or isp is None:
+            return html + '<label>error: MAC or isp is None</label>'
 
         if not isp.isalnum() or int(isp) > 3:
-            return html + '<label>error: sp</label>'
+            return html + '<label>error: isp</label>'
 
         mac = mac.replace('-', ':').upper().strip()
         if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
-            return html + '<label>mac error</label>'
+            return html + '<label>wrong format of MAC (should be HH:HH:HH:HH:HH:HH or HH-HH-HH-HH-HH-HH)</label>'
 
         mac_opener.open(mac, int(isp))
         print(mac, isp)

@@ -34,8 +34,9 @@ class MacStore:
 
 @singleton
 class MacStoreByCsv(MacStore):
-    def __init__(self, path='macs.csv'):
-        self.path = path
+    def __init__(self, path=None):
+        file_path = os.path.dirname(os.path.abspath(__file__))
+        self.path = path or os.path.join(file_path, 'macs.csv')
 
     def get_macs(self):
         if not os.path.exists(self.path):

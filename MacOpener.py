@@ -21,7 +21,7 @@ class MacOpener:
             self.ip = socket.inet_aton(local_ip)
         else:
             # only available for dormitory subnet
-            IpFinder.get_ip_startswith('10.21.')
+            self.ip = socket.inet_aton(IpFinder.get_ip_startswith('10.21.'))
         assert self.ip is not None, 'Can not find a correct local ip address. \
 Please specify the IP address thought command-line argument using --ip'
 

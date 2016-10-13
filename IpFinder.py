@@ -1,7 +1,7 @@
 import subprocess
 import re
 import platform
-import socket
+# import socket
 
 
 def _find_all_ip(platform):
@@ -40,7 +40,8 @@ def get_ip_startswith(prefix):
     # self.ip = socket.inet_aton('10.21.124.107')
     for ip in find_all_ip():
         if ip.startswith(prefix):
-            return socket.inet_aton(ip)
+            # return socket.inet_aton(ip)
+            return ip
     return None
 
 if __name__ == '__main__':
