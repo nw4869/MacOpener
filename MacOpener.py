@@ -7,16 +7,16 @@ import IpFinder
 
 
 class MacOpener:
-
     ISP_CHINA_UNICOM = 1
     ISP_CHINA_TELECOM = 2
     ISP_CHINA_MOBILE = 3
 
-    def __init__(self, server='172.16.1.1', port=20015, local_ip=None):
+    def __init__(self, server='172.16.1.1', port=20015, local_ip=None, debug=False):
         self.server = server
         self.port = port
         self.uid = b'test'
         self.ip = None
+        self.debug = debug
         if local_ip is not None:
             self.ip = socket.inet_aton(local_ip)
         else:
@@ -42,14 +42,21 @@ Please specify the IP address thought command-line argument using --ip'
                              uid or self.uid, ip or self.ip, mac, isp, op)
         return struct.pack('<56s I', packet, self._checksum(packet))
 
-    def open(self, mac, isp):
+    def do(self, mac, isp, op):
         mac = mac.replace('-', ':').upper().strip()
-        data = self._make_packet(mac.encode(), isp)
+        data = self._make_packet(mac.encode(), isp, op)
         print(data.hex())
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(data, (self.server, self.port))
-        # print(self.ip, ":", s.recv(1024).hex())
+        if self.debug:
+            print(self.ip, ":", s.recv(1024).hex())
         s.close()
+
+    def open(self, mac, isp):
+        self.do(mac, isp, 0)
+
+    def close(self, mac, isp):
+        self.do(mac, isp, 1)
 
 
 if __name__ == '__main__':
@@ -57,6 +64,8 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--server', default='172.16.1.1')
     parser.add_argument('-sp', '--server port', dest='server_port', type=int, default=20015)
     parser.add_argument('-i', '--ip')
+    parser.add_argument('-o', '--op', type=int, default=0)
+    parser.add_argument('--debug', action='store_true')
     parser.add_argument('mac')
     parser.add_argument('isp', type=int, choices=[1, 2, 3])
     args = parser.parse_args()
@@ -67,8 +76,8 @@ if __name__ == '__main__':
         exit(1)
 
     try:
-        opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip)
-        opener.open(args.mac, args.isp)
+        opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip, debug=args.debug)
+        opener.do(args.mac, args.isp, args.op)
     except AssertionError as e:
         print(e)
         exit(1)
