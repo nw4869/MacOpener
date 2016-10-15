@@ -20,17 +20,31 @@ class MacsOpener:
     def get_mac_opener(self):
         return self.macOpener
 
+    def get_mac_store(self):
+        return self.macStore
 
-class MacsOpenerWithChecker(MacsOpener):
-    def __init__(self, mac_store, mac_opener=None, status_checker=None):
+
+class MacsOpenerWithChecker:
+    def __init__(self, macs_opener, status_checker):
         self.status_checker = status_checker
-        super().__init__(mac_store, mac_opener)
+        self.macs_opener = macs_opener
 
     def do(self):
         if self.status_checker.is_alive():
-            super().do()
+            self.macs_opener.do()
         else:
             print('---skipped macs opening: server disconnected')
+
+
+class MacsOpenerWithDeduplicate:
+    def __init__(self, macs_opener):
+        self.macs_opener = macs_opener
+
+    def do(self):
+        if isinstance(self.macs_opener.get_mac_store(), Deduplicatable):
+            self.macs_opener.get_mac_store().deduplicate()
+        self.macs_opener.do()
+
 
 if __name__ == '__main__':
     action = MacsOpener(MacStoreByCsv(), MacOpener(local_ip='10.21.124.111'))

@@ -3,7 +3,7 @@ from flask import request
 from MacOpener import MacOpener
 import re
 from MacStore import MacStoreByCsv
-from MacsOpener import MacsOpener, MacsOpenerWithChecker
+from MacsOpener import MacsOpener, MacsOpenerWithChecker, MacsOpenerWithDeduplicate
 from RepeatTimer import RepeatTimer
 import argparse
 from StatusChecker import StatusChecker
@@ -104,7 +104,11 @@ if __name__ == '__main__':
         status_checker = StatusChecker(mac_opener, args.timeout)
         start_timer(status_checker, args.checker_interval, 0)
 
-        start_timer(MacsOpenerWithChecker(mac_store, mac_opener, status_checker), args.interval, args.delay)
+        macs_opener = MacsOpener(mac_store, mac_opener)
+        macs_opener = MacsOpenerWithDeduplicate(macs_opener)
+        macs_opener = MacsOpenerWithChecker(macs_opener, status_checker)
+
+        start_timer(macs_opener, args.interval, args.delay)
 
         start_app()
     except AssertionError as e:
