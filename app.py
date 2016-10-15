@@ -40,6 +40,11 @@ def submit():
     return render_template('index.html', success=True, mac=mac, isp=isp)
 
 
+def simple(env, resp):
+    resp('302 Found', [('Location', app.config["APPLICATION_ROOT"]), ('Content-Type', 'text/plain')])
+    return [b'Hello WSGI World']
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MAC opener for GUET by nightwind')
 
@@ -50,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--ip')
     parser.add_argument('-t', '--interval', type=int, default=5 * 60)
     parser.add_argument('-d', '--delay', type=int, default=0)
+    parser.add_argument('-r', '--root', default=None)
     args = parser.parse_args()
 
     try:
@@ -59,7 +65,20 @@ if __name__ == '__main__':
         timer = RepeatTimer(args.interval, action.do, args.delay)
         timer.setDaemon(True)
         timer.start()
-        app.run(args.listen, args.port)
+
+        if args.root and args.root != '/':
+            if not args.root.startswith('/'):
+                args.root = '/' + args.root
+            from werkzeug.serving import run_simple
+            from werkzeug.wsgi import DispatcherMiddleware
+            app.config["APPLICATION_ROOT"] = args.root
+            application = DispatcherMiddleware(simple, {
+                app.config['APPLICATION_ROOT']: app,
+            })
+            run_simple(args.listen, args.port, application)
+        else:
+            app.run(args.listen, args.port)
+
     except AssertionError as e:
         print(e)
         exit(1)

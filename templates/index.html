@@ -42,8 +42,8 @@
 <body>
 <div class="center">
     <div>
-        <h2 onclick=" window.location.href = location.href">MacOpener for GUET</h2>
-        <form id="form" action="/" method="post">
+        <h2 onclick="to_index()">MacOpener for GUET</h2>
+        <form id="form" method="post">
             <div><label for="mac">MAC: </label><input name="mac" id="mac"/></div>
             <div>
                 <label>
@@ -90,6 +90,9 @@
         handle_success();
     };
 
+    function to_index() {
+        window.location.href = "{{ url_for('home') }}"
+    }
     function set_isp(isp) {
         document.getElementById('isp')[isp - 1].selected = true;
     }
@@ -133,6 +136,7 @@
         document.cookie = 'macs=';
     }
     function submit() {
+        document.getElementById('form').action = "{{ url_for('submit') }}";
         document.getElementById('form').submit();
     }
     function handle_success() {
@@ -165,7 +169,7 @@
             e.setAttribute('class', 'history_item');
             e.setAttribute('style', 'border-style: none');
             var ec = document.createElement('button');
-            ec.setAttribute('onclick', 'clear_macs(); window.location.href = location.href;');
+            ec.setAttribute('onclick', 'clear_macs(); to_index();');
             ec.appendChild(document.createTextNode('clear'));
             e.appendChild(ec);
             history_div.appendChild(e);
