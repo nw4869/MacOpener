@@ -65,7 +65,12 @@ def parse_args():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--timeout', type=int, default=3, help='status checker timeout seconds')
     parser.add_argument('--checker_interval', type=int, default=10, help='status checker interval seconds')
-    return parser.parse_args()
+    parser.add_argument('--ip_forward', action='store_true')
+    args = parser.parse_args()
+    if args.ip_forward and args.server == MacOpener.DEFAULT_SERVER:
+        print('--ip_ward reply on --server')
+        exit(1)
+    return args
 
 
 def start_timer(action, interval, delay):
@@ -94,7 +99,7 @@ if __name__ == '__main__':
 
     try:
         mac_store = MacStoreByCsv()
-        mac_opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip)
+        mac_opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip, ip_forward=args.ip_forward)
 
         status_checker = StatusChecker(mac_opener, args.timeout)
         start_timer(status_checker, args.checker_interval, 0)

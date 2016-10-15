@@ -12,19 +12,26 @@ class MacOpener:
     ISP_CHINA_TELECOM = 2
     ISP_CHINA_MOBILE = 3
 
-    def __init__(self, server='172.16.1.1', port=20015, local_ip=None, debug=False):
+    DEFAULT_SERVER = '172.16.1.1'
+    DEFAULT_PORT = 20015
+
+    def __init__(self, server=DEFAULT_SERVER, port=DEFAULT_PORT, local_ip=None, debug=False, ip_forward=False):
         self.server = server
         self.port = port
         self.uid = b'test'
         self.ip = None
         self.debug = debug
-        if local_ip is not None:
-            self.ip = socket.inet_aton(local_ip)
+        if ip_forward:
+            self.ip = self.server
         else:
-            # only available for dormitory subnet
-            self.ip = socket.inet_aton(IpFinder.get_ip_startswith('10.21.'))
-        assert self.ip is not None, 'Can not find a correct local ip address. \
-Please specify the IP address thought command-line argument using --ip'
+            if local_ip is not None:
+                self.ip = local_ip
+            else:
+                # only available for dormitory subnet
+                self.ip = IpFinder.get_ip_startswith('10.21.')
+            assert ip_forward or self.ip is not None, 'Can not find a correct local ip address. \
+    Please specify the IP address thought command-line argument using --ip'
+        self.ip = socket.inet_aton(self.ip)
 
     @staticmethod
     def _checksum(data):
