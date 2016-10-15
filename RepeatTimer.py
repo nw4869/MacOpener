@@ -30,7 +30,7 @@ class RepeatTimer(Thread):
 
     """
 
-    def __init__(self, interval, function, delay=None, args=None, kwargs=None):
+    def __init__(self, interval, function, delay=None, args=None, kwargs=None, daemon=False):
         Thread.__init__(self)
         self.delay = delay
         if delay is None:
@@ -39,6 +39,7 @@ class RepeatTimer(Thread):
         self.function = function
         self.args = args if args is not None else []
         self.kwargs = kwargs if kwargs is not None else {}
+        self.setDaemon(daemon)
         self.finished = Event()
 
     def cancel(self):

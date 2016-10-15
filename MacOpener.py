@@ -3,6 +3,7 @@ import argparse
 import socket
 import struct
 import re
+import select
 import IpFinder
 
 
@@ -45,10 +46,10 @@ Please specify the IP address thought command-line argument using --ip'
     def do(self, mac, isp, op):
         mac = mac.replace('-', ':').upper().strip()
         data = self._make_packet(mac.encode(), isp, op)
-        print(data.hex())
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.sendto(data, (self.server, self.port))
         if self.debug:
+            print(data.hex())
             print(self.ip, ":", s.recv(1024).hex())
         s.close()
 
@@ -57,6 +58,21 @@ Please specify the IP address thought command-line argument using --ip'
 
     def close(self, mac, isp):
         self.do(mac, isp, 1)
+
+    def check_server_status(self, timeout):
+        mac = 'AA:BB:CC:DD:EE:FF'
+        isp = 1
+        op = 0
+        data = self._make_packet(mac.encode(), isp, op)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.sendto(data, (self.server, self.port))
+
+        success = False
+        s.setblocking(False)
+        ready = select.select([s], [], [], timeout)
+        if ready[0]:
+            success = True
+        return success
 
 
 if __name__ == '__main__':

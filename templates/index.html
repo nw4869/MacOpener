@@ -75,6 +75,14 @@
             {#            <span class="history_item" onclick="onclick_history_item(this)">aa:bb:cc:dd:ee:ff, 1</span>#}
             {#            <span class="history_item" onclick="onclick_history_item(this)">aa:bb:cc:dd:ee:00, 2</span>#}
         </div>
+        <div>
+            server status:
+            {% if alive %}
+                <label style="color: greenyellow;">connected</label>
+            {% else %}
+                <label style="color: #d8000c;">disconnect</label>
+            {% endif %}
+        </div>
     </div>
 </div>
 
