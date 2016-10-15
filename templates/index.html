@@ -43,6 +43,7 @@
 <div class="center">
     <div>
         <h2 onclick="to_index()">MacOpener for GUET</h2>
+        <i>internal test only</i>
         <form id="form" method="post">
             <div><label for="mac">MAC: </label><input name="mac" id="mac"/></div>
             <div>
@@ -57,7 +58,7 @@
             </div>
             <div>
                 <input type="checkbox" id="save" name="save" value="save"/>
-                <label for="save">save (auto submit every 300 seconds.)</label>
+                <label for="save">save (auto submit every {{ interval }} seconds.)</label>
             </div>
             <button type="submit" onclick="submit()" class="submit">submit</button>
         </form>

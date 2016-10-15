@@ -12,7 +12,8 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('index.html', mac=request.args.get('mac'), isp=request.args.get('isp'))
+    return render_template('index.html', mac=request.args.get('mac'), isp=request.args.get('isp'),
+                           interval=args.interval)
 
 
 @app.route('/', methods=['POST'])
@@ -22,22 +23,22 @@ def submit():
     save = 'save' in request.form
 
     if mac is None or len(mac) == 0 or isp is None:
-        return render_template('index.html', error='MAC or isp is None', mac=mac, isp=isp)
+        return render_template('index.html', error='MAC or isp is None', mac=mac, isp=isp, interval=args.interval)
 
     if not isp.isalnum() or int(isp) > 3:
-        return render_template('index.html', error='isp is incorrect', mac=mac, isp=isp)
+        return render_template('index.html', error='isp is incorrect', mac=mac, isp=isp, interval=args.interval)
 
     mac = mac.replace('-', ':').upper().strip()
     if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
         return render_template('index.html',
                                error='wrong format of MAC (should be HH:HH:HH:HH:HH:HH or HH-HH-HH-HH-HH-HH)',
-                               mac=mac, isp=isp)
+                               mac=mac, isp=isp, interval=args.interval)
 
     mac_opener.open(mac, int(isp))
     print(mac, isp)
     if save:
         mac_store.add_mac(mac, isp)
-    return render_template('index.html', success=True, mac=mac, isp=isp)
+    return render_template('index.html', success=True, mac=mac, isp=isp, interval=args.interval)
 
 
 def simple(env, resp):
@@ -56,6 +57,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--interval', type=int, default=5 * 60)
     parser.add_argument('-d', '--delay', type=int, default=0)
     parser.add_argument('-r', '--root', default=None)
+    parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
     try:
@@ -66,6 +68,8 @@ if __name__ == '__main__':
         timer.setDaemon(True)
         timer.start()
 
+        app.config['DEBUG'] = args.debug
+        app.config['args'] = args
         if args.root and args.root != '/':
             if not args.root.startswith('/'):
                 args.root = '/' + args.root
@@ -75,9 +79,9 @@ if __name__ == '__main__':
             application = DispatcherMiddleware(simple, {
                 app.config['APPLICATION_ROOT']: app,
             })
-            run_simple(args.listen, args.port, application)
+            run_simple(args.listen, args.port, application, use_reloader=args.debug)
         else:
-            app.run(args.listen, args.port)
+            app.run(args.listen, args.port, debug=args.debug)
 
     except AssertionError as e:
         print(e)
