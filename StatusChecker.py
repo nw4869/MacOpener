@@ -13,6 +13,7 @@ class StatusChecker:
         if self.first or datetime.datetime.now().minute % 30 == 0:
             self.first = False
             print(datetime.datetime.now(), 'alive:', self.alive)
+        return self.alive
 
     def is_alive(self):
         return self.alive

@@ -33,6 +33,18 @@ class MacOpener:
     Please specify the IP address thought command-line argument using --ip'
         self.ip = socket.inet_aton(self.ip)
 
+    def get_server(self):
+        return self.server, self.port
+
+    def set_server(self, server, port=DEFAULT_PORT, ip_forward=False):
+        self.server = server
+        self.port = port
+        if ip_forward:
+            self.ip = socket.inet_aton(server)
+
+    def get_local_ip(self):
+        return socket.inet_ntoa(self.ip)
+
     @staticmethod
     def _checksum(data):
         cs = 0x4e67c6a7

@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from flask import request
+from flask import request, jsonify
 from MacOpener import MacOpener
 import re
 from MacStore import MacStoreByCsv
@@ -7,6 +7,7 @@ from MacsOpener import MacsOpener, MacsOpenerWithChecker, MacsOpenerWithDeduplic
 from RepeatTimer import RepeatTimer
 import argparse
 from StatusChecker import StatusChecker
+from threading import Thread
 
 app = Flask(__name__)
 
@@ -47,6 +48,68 @@ def submit():
                            alive=status_checker.is_alive())
 
 
+@app.route('/update_server')
+def show_update_server():
+    return render_template('update_server.html')
+
+
+def validate_key(key):
+    return key == args.key
+
+
+@app.route('/api/server', methods=['GET', 'POST'])
+def update_server():
+    if request.method == 'GET':
+        ip, port = mac_opener.get_server()
+        return jsonify({'ip': ip, 'port': port})
+    key = request.form.get('key')
+    ip = request.form.get('ip')
+    port = request.form.get('port', str(MacOpener.DEFAULT_PORT))
+    blocking = request.form.get('blocking', 'False')
+    blocking = blocking.upper() == 'TRUE'
+    ip_forward = request.form.get('ip_forward', 'TRUE')
+    ip_forward = ip_forward.upper() == 'TRUE'
+
+    error = ''
+    if ip is None:
+        error = 'ip is required'
+    if not re.match(r'^((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]\d)|\d)(\.((25[0-5])|(2[0-4]\d)|(1\d\d)|([1-9]\d)|\d)){3}$', ip):
+        error = 'wrong format of ip address'
+
+    if port and not port.isdigit():
+        error = 'wrong format of port'
+    port = int(port)
+
+    if not error and key is None:
+        error = 'key is required'
+
+    def result(reason, code):
+        return jsonify({'success': 200 <= code < 300, 'reason': reason}), code
+
+    if error:
+        return result(error, 400)
+
+    if not validate_key(key):
+        return result('key is incorrect', 401)
+
+    try:
+        opener = MacOpener(server=ip, port=port, local_ip=mac_opener.get_local_ip(), ip_forward=ip_forward)
+    except AssertionError as e:
+        return result(e, 400)
+    checker = StatusChecker(opener, args.timeout)
+    if blocking:
+        if not checker.do():
+            return result('server timeout', 400)
+        else:
+            return result('success', 201)
+    else:
+        def check_and_update():
+            if checker.do():
+                mac_opener.set_server(ip, port, ip_forward)
+        Thread(target=check_and_update).start()
+        return result('accepted', 202)
+
+
 def simple(env, resp):
     resp('302 Found', [('Location', app.config["APPLICATION_ROOT"]), ('Content-Type', 'text/plain')])
     return [b'Hello WSGI World']
@@ -66,6 +129,8 @@ def parse_args():
     parser.add_argument('--timeout', type=int, default=3, help='status checker timeout seconds')
     parser.add_argument('--checker_interval', type=int, default=10, help='status checker interval seconds')
     parser.add_argument('--ip_forward', action='store_true')
+    parser.add_argument('-k', '--key', help='the password for update server (default:I_am_the_key)',
+                        default='I_am_the_key')
     args = parser.parse_args()
     if args.ip_forward and args.server == MacOpener.DEFAULT_SERVER:
         print('--ip_ward reply on --server')
