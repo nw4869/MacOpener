@@ -17,3 +17,6 @@ class StatusChecker:
 
     def is_alive(self):
         return self.alive
+
+    def set_alive(self, alive):
+        self.alive = alive

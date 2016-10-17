@@ -61,7 +61,7 @@ def validate_key(key):
 def update_server():
     if request.method == 'GET':
         ip, port = mac_opener.get_server()
-        return jsonify({'ip': ip, 'port': port})
+        return jsonify({'ip': ip, 'port': port, 'alive': status_checker.is_alive()})
     key = request.form.get('key')
     ip = request.form.get('ip')
     port = request.form.get('port', str(MacOpener.DEFAULT_PORT))
@@ -101,6 +101,7 @@ def update_server():
         if not checker.do():
             return result('server timeout', 400)
         else:
+            mac_opener.set_server(ip, port, ip_forward)
             return result('success', 201)
     else:
         def check_and_update():
