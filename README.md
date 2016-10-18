@@ -2,6 +2,8 @@
 MacOpener for guet by nightwind
 
 # Usage
+
+``` bash
 guetsec@GuetSec:~/MacOpener$ python3.5 app.py  --help
 
 usage: app.py [-h] [-l LISTEN] [-p PORT] [-s SERVER] [-sp SERVER_PORT] [-i IP]
@@ -26,14 +28,14 @@ optional arguments:
                         status checker interval seconds
   --ip_forward
   -k KEY, --key KEY     the password for update server (default:I_am_the_key)
-
+```
 
   
 # Note
   1. 只能在宿舍使用,网段大概为（10.21.0.0/16),其他网段无效.
-  2. 如果程序获取ip失败，可以使用参数指定本机ip：--ip xx.xx.xx.xx
-  3. 可以自定义服务器，使用--server指定，还可以附加--ip_forward选项表示服务器用于转发报文（这样报文里面的本机IP是转发服务器的IP），这样就可以将客户端（可以使带端口转发的路由器）放在宿舍，然后web服务端，放在别的地方。
-  4. 如果用转发服务器的话，而且放在宿舍的openwrt上，因为每天断电加上DHCP可能改变IP地址，这样可以在转发服务器上运行一下脚本来向服务器更新转发服务器地址：
+  2. 如果程序获取ip失败，可以使用参数指定本机ip：--ip xx.xx.xx.xx（因为系统检查报文中的ip地址，必须于发送者的ip地址一致）
+  3. 可以自定义服务器，使用--server指定，还可以附加--ip_forward选项表示服务器用于转发报文（这样报文里面的本机IP是转发服务器的IP），这样就可以将客户端（可以使带端口转发的路由器）放在宿舍，然后web服务端，放在别的地方。
+  4. 如果用转发服务器的话，而且放在宿舍的openwrt上，因为每天断电加上DHCP可能改变IP地址，这样可以在转发服务器上运行一下脚本来向服务器更新转发服务器地址：
  
 ``` bash
 date
