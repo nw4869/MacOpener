@@ -1,5 +1,5 @@
 # MacOpener
-MacOpener for guet by nightwind
+MacOpener for guet （base on python3.5, flask）
 
 # Usage
 
@@ -44,5 +44,9 @@ ip=`ifconfig eth1.1 | awk '/inet addr/ {print $2}' | cut -f2 -d ":"`
 echo $ip
 curl -d "ip=$ip&key=I_am_the_key&blocking=true" $server/api/server
 ```
-  作用就是获取指定网卡的ip然后通过/api/server的POST请求更新ip地址。参数key是服务端预设的密码，防止恶意干扰；
-  blocking=true：阻塞模式，即等待服务端检查ip地址返回success或timeout。否则非阻塞模式：立刻返回，不立刻检查ip，服务端后台自行检查更新ip，一律返回accepted。
+    作用就是获取指定网卡的ip然后通过/api/server的POST请求更新ip地址。参数key是服务端预设的密码，防止恶意干扰；
+    blocking=true：阻塞模式，即等待服务端检查ip地址返回success或timeout。否则非阻塞模式：立刻返回，不立刻检查ip，服务端后台自行检查更新ip，一律返回accepted。
+
+# 背景
+    学校由于某种原因升级出校器，导致宿舍拨号需要使用出校器（但是只支持windows）。本程序的作用是建立一个web服务器，可以方便Linux/Mac/路由器用户进行宽带拨号。
+    
