@@ -89,3 +89,41 @@ class MacStoreByCsv(MacStore, Deduplicatable):
             mac_set.add(mac)
             mac_list.append((mac, isp))
         self.set_macs(mac_list)
+
+
+class MacStoreMemProxy(MacStore, Deduplicatable):
+    def __init__(self, mac_store):
+        self.mac_store = mac_store
+        self.cache = None
+        self.cache_is_dirty = False
+        self.loaded = False
+
+    def get_macs(self):
+        if self.loaded and self.cache is not None and not self.cache_is_dirty:
+            return list(self.cache.items())
+
+        self.cache = dict(self.get_macs())
+        self.cache_is_dirty = False
+        self.loaded = True
+        return self.cache
+
+    def add_mac(self, mac, isp):
+        self.mac_store.add_mac(mac, isp)
+
+        if self.cache is None:
+            self.cache = {}
+        self.cache[mac] = isp
+
+    def set_macs(self, macs):
+        self.mac_store.set_macs(macs)
+
+        self.cache = dict(macs)
+        self.cache_is_dirty = False
+
+    def deduplicate(self):
+        if isinstance(self.mac_store, Deduplicatable):
+            self.mac_store.deduplicate()
+        # dict is not duplicate
+
+    def refresh_macs(self):
+        self.cache_is_dirty = True

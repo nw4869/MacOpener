@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from flask import request, jsonify
 from MacOpener import MacOpener
 import re
-from MacStore import MacStoreByCsv
+from MacStore import MacStoreByCsv, MacStoreMemProxy
 from MacsOpener import MacsOpener, MacsOpenerWithChecker, MacsOpenerWithDeduplicate
 from RepeatTimer import RepeatTimer
 import argparse
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     try:
-        mac_store = MacStoreByCsv()
+        mac_store = MacStoreMemProxy(MacStoreByCsv())
         mac_opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip, ip_forward=args.ip_forward)
 
         status_checker = StatusChecker(mac_opener, args.timeout)
