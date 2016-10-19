@@ -42,13 +42,12 @@
 <body>
 <div class="center">
     <div>
-        <h2 onclick="to_index()">MacOpener for GUET</h2>
-        <i>internal test only</i>
+        <h2 onclick="to_index('{{ url_for('home') }}')">MacOpener for GUET</h2>
         <form id="form" method="post">
             <div><label for="mac">MAC: </label><input name="mac" id="mac"/></div>
             <div>
                 <label>
-                    isp:
+                    运营商:
                     <select name="isp" id="isp">
                         <option value="1">联通</option>
                         <option value="2">电信</option>
@@ -58,36 +57,58 @@
             </div>
             <div>
                 <input type="checkbox" id="save" name="save" value="save"/>
-                <label for="save">save (auto submit every {{ interval }} seconds.)</label>
+                <label for="save">保存到服务器 (自动发送请求，每 {{ interval }} 秒.)</label>
             </div>
-            <button type="submit" onclick="submit()" class="submit">submit</button>
+            <button id="btn_submit" type="submit" onclick="submit('{{ url_for('submit') }}')" class="submit">提交</button>
         </form>
         {% if error %}
             <div id="error" class="error">
-                error: {{ error }}
+                错误: {{ error }}
             </div>
         {% endif %}
         {% if success %}
             <div id="success" class="success">success!</div>
         {% endif %}
-        <div id="history" class="center">
-            <h3><i>History:</i></h3>
+        <div id="history" class="center" style="display: none">
+            <h3><i>提交历史:</i></h3>
             {#            <span class="history_item" onclick="onclick_history_item(this)">aa:bb:cc:dd:ee:ff, 1</span>#}
             {#            <span class="history_item" onclick="onclick_history_item(this)">aa:bb:cc:dd:ee:00, 2</span>#}
         </div>
         <div>
-            server status:
+            服务器状态:
             {% if alive %}
-                <label style="color: greenyellow;">connected</label>
+                <label id="status" style="color: greenyellow;">在线</label>
             {% else %}
-                <label style="color: #d8000c;">disconnect</label>
+                <label id="status" style="color: #d8000c;">离线</label>
             {% endif %}
+        </div>
+        <div>
+            <h3>说明：</h3>
+            由于新版出校器只支持windows平台，所以本系统提供Linux/MacOS等用户进行宽带拨号连接的运营商选择。<br>
+            出校器系统根据MAC（物理地址）来存储和选择拨号时的运营商，所以这里需要提供你的MAC。
+            <h4>MAC获取方法（10.21开头的ip）:</h4>
+            <p>
+                Mac OS用户执行：<br>ifconfig | awk '/ether/{MAC=$2;LNR=NR;next;} /inet 10.21/ && NR==LNR+1{print MAC;}'
+            </p>
+            <p>
+                Ubuntu用户： <br>ifconfig | awk '/HWaddr/{MAC=$5;LNR=NR;next;} /inet addr:10.21./ && NR==LNR+1{print MAC}'
+            </p>
+        <i>仅供内部测试使用</i>
+
         </div>
     </div>
 </div>
 
+<script>
+    home = '{{ url_for('home') }}';
+</script>
+<script type="application/javascript" src="{{ url_for('static', filename='mac_loger.js') }}">
+</script>
 <script type="application/javascript">
     window.onload = function () {
+        if (document.getElementById('status').innerText == '离线') {
+            document.getElementById('btn_submit').setAttribute('disabled', true)
+        }
         fill_mac_to_input(get_latest_mac_isp());
         {% if isp %}
             set_isp({{ isp|int }});
@@ -98,107 +119,6 @@
         show_history();
         handle_success();
     };
-
-    function to_index() {
-        window.location.href = "{{ url_for('home') }}"
-    }
-    function set_isp(isp) {
-        document.getElementById('isp')[isp - 1].selected = true;
-    }
-    function get_isp() {
-        return document.getElementById('isp').selectedIndex + 1;
-    }
-    function set_mac(mac) {
-        document.getElementById('mac').value = mac;
-    }
-    function get_mac() {
-        return document.getElementById('mac').value;
-    }
-    function get_latest_mac_isp() {
-        return get_macs().split('|')[0]
-    }
-    function get_macs() {
-        if (document.cookie.length > 0) {
-            var c_name = 'macs';
-            var c_start = document.cookie.indexOf(c_name + "=");
-            if (c_start != -1) {
-                c_start = c_start + c_name.length + 1;
-                var c_end = document.cookie.indexOf(";", c_start);
-                if (c_end == -1) c_end = document.cookie.length;
-                return document.cookie.substring(c_start, c_end)
-            }
-        }
-        return ""
-    }
-    function push_cookie(mac, isp) {
-        var _date = new Date();
-        _date.setDate(_date.getDate() + 30);
-        var macs = get_macs();
-        if (macs.length == 0) {
-            macs = mac + ',' + isp;
-        } else {
-            macs += '|' + mac + ',' + isp;
-        }
-        document.cookie = 'macs=' + macs + ';expires=' + _date.toGMTString();
-    }
-    function clear_macs() {
-        document.cookie = 'macs=';
-    }
-    function submit() {
-        document.getElementById('form').action = "{{ url_for('submit') }}";
-        document.getElementById('form').submit();
-    }
-    function handle_success() {
-        if (document.getElementById('success')) {
-            push_cookie(get_mac(), get_isp());
-            insert_history_item(get_mac(), get_isp());
-            document.getElementById('history').style.display = ''
-        }
-    }
-    function fill_mac_to_input(mac_isp) {
-        mac_isp = mac_isp.split(',');
-        if (mac_isp.length == 2) {
-            set_mac(mac_isp[0].trim());
-            set_isp(mac_isp[1].trim());
-        }
-    }
-    function onclick_history_item(e) {
-        fill_mac_to_input(e.innerText)
-    }
-    function insert_history_item(mac, isp) {
-        var e = document.createElement('span');
-        e.setAttribute('class', 'history_item');
-        e.setAttribute('onclick', 'onclick_history_item(this)');
-        e.appendChild(document.createTextNode(mac + ', ' + isp));
-        var history_div = document.getElementById('history');
-        var firstChild = history_div.firstElementChild;
-        if (firstChild.nextElementSibling == null) {
-            history_div.appendChild(e);
-            e = document.createElement('span');
-            e.setAttribute('class', 'history_item');
-            e.setAttribute('style', 'border-style: none');
-            var ec = document.createElement('button');
-            ec.setAttribute('onclick', 'clear_macs(); to_index();');
-            ec.appendChild(document.createTextNode('clear'));
-            e.appendChild(ec);
-            history_div.appendChild(e);
-        } else {
-            history_div.insertBefore(e, firstChild.nextElementSibling);
-        }
-    }
-    function show_history() {
-        var macs = get_macs().split('|');
-        if (macs[0].length == 0) {
-            // hide History
-            document.getElementById('history').style.display = 'none';
-            return;
-        }
-        for (var i = 0; i < macs.length; i++) {
-            var mac = macs[i].split(',')[0].trim();
-            var isp = macs[i].split(',')[1].trim();
-            insert_history_item(mac, isp);
-        }
-    }
 </script>
 </body>
 </html>
