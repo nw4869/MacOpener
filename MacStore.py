@@ -102,7 +102,7 @@ class MacStoreMemProxy(MacStore, Deduplicatable):
         if self.loaded and self.cache is not None and not self.cache_is_dirty:
             return list(self.cache.items())
 
-        self.cache = dict(self.get_macs())
+        self.cache = dict(self.mac_store.get_macs())
         self.cache_is_dirty = False
         self.loaded = True
         return self.cache
