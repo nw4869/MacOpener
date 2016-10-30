@@ -40,7 +40,8 @@ def submit():
         return render_template('index.html', error=error, mac=mac, isp=isp, interval=args.interval,
                                alive=status_checker.is_alive())
 
-    mac_opener.open(mac, int(isp))
+    isp = int(isp)
+    mac_opener.open(mac, isp)
     print(mac, isp)
     if save:
         mac_store.add_mac(mac, isp)
