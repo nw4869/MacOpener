@@ -115,6 +115,14 @@ def update_server():
         return result('accepted', 202)
 
 
+@app.route('/api/macs')
+def macs():
+    macs = []
+    for mac_isp in mac_store.get_macs():
+        macs.append({'mac': mac_isp[0], 'isp': mac_isp[1]})
+    return jsonify({'macs': macs})
+
+
 def simple(env, resp):
     resp('302 Found', [('Location', app.config["APPLICATION_ROOT"]), ('Content-Type', 'text/plain')])
     return [b'Hello WSGI World']
