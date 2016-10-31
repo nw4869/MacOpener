@@ -117,7 +117,12 @@ class MacOpenerMultiServer:
         self.servers.append(MacOpenerMultiServer.Server(host, port, ip_forward, mac_opener))
 
     def get_servers(self):
-        return list(map(lambda x: x.__dict__, self.servers))
+        def dict_without_opener(server):
+            d = dict(server.__dict__)
+            if 'mac_opener' in d:
+                del d['mac_opener']
+            return d
+        return list(map(dict_without_opener, self.servers))
 
     def set_servers(self, servers):
         for server in servers:
