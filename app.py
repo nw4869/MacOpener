@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from flask import request, jsonify
-from MacOpener import MacOpener
+from MacOpener import MacOpener, MacOpenerMultiServer
 import re
 from MacStore import MacStoreByCsv, MacStoreMemProxy
 from MacsOpener import MacsOpener, MacsOpenerWithChecker, MacsOpenerWithDeduplicate
@@ -61,8 +61,8 @@ def validate_key(key):
 @app.route('/api/server', methods=['GET', 'POST'])
 def update_server():
     if request.method == 'GET':
-        ip, port = mac_opener.get_server()
-        return jsonify({'ip': ip, 'port': port, 'alive': status_checker.is_alive()})
+        servers = mac_opener.get_servers()
+        return jsonify({'servers': servers, 'alive': status_checker.is_alive()})
     key = request.form.get('key')
     ip = request.form.get('ip')
     port = request.form.get('port', str(MacOpener.DEFAULT_PORT))
@@ -84,6 +84,9 @@ def update_server():
     if not error and key is None:
         error = 'key is required'
 
+    # if not ip_forward and mac_opener.get_local_ip() is None:
+    #     error = 'must set --ip_forward due to server didn\'t set local_ip'
+
     def result(reason, code):
         return jsonify({'success': 200 <= code < 300, 'reason': reason}), code
 
@@ -102,12 +105,12 @@ def update_server():
         if not checker.do():
             return result('server timeout', 400)
         else:
-            mac_opener.set_server(ip, port, ip_forward)
+            mac_opener.add_server(ip, port, ip_forward)
             return result('success', 201)
     else:
         def check_and_update():
             if checker.do():
-                mac_opener.set_server(ip, port, ip_forward)
+                mac_opener.add_server(ip, port, ip_forward)
         Thread(target=check_and_update).start()
         return result('accepted', 202)
 
@@ -166,7 +169,7 @@ if __name__ == '__main__':
 
     try:
         mac_store = MacStoreMemProxy(MacStoreByCsv())
-        mac_opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip, ip_forward=args.ip_forward)
+        mac_opener = MacOpenerMultiServer([(args.server, args.server_port, args.ip_forward)], args.ip, args.debug)
 
         status_checker = StatusChecker(mac_opener, args.timeout)
         start_timer(status_checker, args.checker_interval, 0)

@@ -4,6 +4,7 @@ import socket
 import struct
 import re
 import select
+import time
 
 
 class MacOpener:
@@ -93,6 +94,91 @@ class MacOpener:
             success = True
         return success
 
+
+class MacOpenerMultiServer:
+    class Server:
+        def __init__(self, host, port, ip_forward, mac_opener):
+            self.host = host
+            self.port = port
+            self.ip_forward = ip_forward
+            self.ready = False
+            self.last_ready_time = time.time()
+            self.mac_opener = mac_opener
+
+    def __init__(self, servers, local_ip=None, debug=False):
+        self.servers = []
+        self.local_ip = local_ip
+        self.debug = debug
+
+        self.set_servers(servers)
+
+    def add_server(self, host, port, ip_forward=False):
+        mac_opener = MacOpener(host, port, self.local_ip, self.debug, ip_forward)
+        self.servers.append(MacOpenerMultiServer.Server(host, port, ip_forward, mac_opener))
+
+    def get_servers(self):
+        return list(map(lambda x: x.__dict__, self.servers))
+
+    def set_servers(self, servers):
+        for server in servers:
+            self.add_server(server[0], server[1], server[2])
+
+    def get_local_ip(self):
+        if self.local_ip is None:
+            return None
+        return socket.inet_ntoa(self.local_ip)
+
+    def do(self, mac, isp, op):
+        for i in range(len(self.servers)):
+            self.debug and print('server:', self.servers[i].__dict__, end=' ')
+            if self.servers[i].ready:
+                self.servers[i].mac_opener.do(mac, isp, op)
+                self.debug and print('send.')
+            else:
+                self.debug and print('pass.')
+
+    def open(self, mac, isp):
+        self.do(mac, isp, 0)
+
+    def close(self, mac, isp):
+        self.do(mac, isp, 1)
+
+    def check_server_status(self, timeout):
+        mac = 'AA:BB:CC:DD:EE:FF'
+        isp = 1
+        op = 0
+
+        sockets = []
+        sockets_server_dict = {}
+        for i in range(len(self.servers)):
+            mac_opener = self.servers[i].mac_opener
+            data = mac_opener._make_packet(mac.encode(), isp, op)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.setblocking(False)
+            server, port = mac_opener.get_server()
+            s.sendto(data, (server, port))
+            sockets.append(s)
+            sockets_server_dict[s] = self.servers[i]
+
+        left_time = timeout
+        while left_time > 0 and len(sockets_server_dict) > 0:
+            start_time = time.time()
+            ready = select.select(sockets, [], [], left_time)
+            for s in ready[0]:
+                if s in sockets_server_dict:
+                    server = sockets_server_dict[s]
+                    server.last_ready_time = time.time()
+                    server.ready = True
+                    del sockets_server_dict[s]
+            left_time -= time.time() - start_time
+
+        for timeout_server in sockets_server_dict.values():
+            timeout_server.ready = False
+            if time.time() - timeout_server.last_ready_time > 60 * 60 * 24:  # timeout a day
+                # remove server
+                self.servers.remove(timeout_server)
+
+        return len(sockets_server_dict) == 0
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MAC opener for GUET by nightwind')
