@@ -183,7 +183,7 @@ class MacOpenerMultiServer:
                 # remove server
                 self.servers.remove(timeout_server)
 
-        return len(sockets_server_dict) == 0
+        return len(self.servers) > len(sockets_server_dict)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MAC opener for GUET by nightwind')
