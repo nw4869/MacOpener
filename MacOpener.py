@@ -4,7 +4,6 @@ import socket
 import struct
 import re
 import select
-import IpFinder
 
 
 class MacOpener:
@@ -28,7 +27,8 @@ class MacOpener:
                 self.ip = local_ip
             else:
                 # only available for dormitory subnet
-                self.ip = IpFinder.get_ip_startswith('10.21.')
+                import IpFinder
+                self.ip = IpFinder.get_ip_startswith('10.21.') or IpFinder.get_ip_startswith('10.20.')
             assert ip_forward or self.ip is not None, 'Can not find a correct local ip address. \
     Please specify the IP address thought command-line argument using --ip'
         self.ip = socket.inet_aton(self.ip)
@@ -103,7 +103,12 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('mac')
     parser.add_argument('isp', type=int, choices=[1, 2, 3])
+    parser.add_argument('--ip_forward', action='store_true')
     args = parser.parse_args()
+
+    if args.ip_forward and args.server == MacOpener.DEFAULT_SERVER:
+        print('--ip_forward reply on --server')
+        exit(1)
 
     mac = args.mac.replace('-', ':').upper().strip()
     if not re.match('^([0-9a-fA-F]{2})(([:][0-9a-fA-F]{2}){5})$', mac):
@@ -111,7 +116,8 @@ if __name__ == '__main__':
         exit(1)
 
     try:
-        opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip, debug=args.debug)
+        opener = MacOpener(server=args.server, port=args.server_port, local_ip=args.ip, debug=args.debug,
+                           ip_forward=args.ip_forward)
         opener.do(args.mac, args.isp, args.op)
     except AssertionError as e:
         print(e)
