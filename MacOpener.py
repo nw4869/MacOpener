@@ -113,6 +113,9 @@ class MacOpenerMultiServer:
         self.set_servers(servers)
 
     def add_server(self, host, port, ip_forward=False):
+        for server in self.servers:
+            if host == server.host and port == server.port and ip_forward == server.ip_forward:
+                return
         mac_opener = MacOpener(host, port, self.local_ip, self.debug, ip_forward)
         self.servers.append(MacOpenerMultiServer.Server(host, port, ip_forward, mac_opener))
 
