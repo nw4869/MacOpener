@@ -12,7 +12,7 @@ class MacsOpener:
         print('---opening', len(self.macStore.get_macs()), 'macs at', datetime.now())
         print('servers:', [(server['host'], server['ready']) for server in self.macOpener.get_servers()])
         for mac_isp in self.macStore.get_macs():
-            print('opening mac:', mac_isp[0], mac_isp[1])
+            # print('opening mac:', mac_isp[0], mac_isp[1])
             self.macOpener.open(mac_isp[0], mac_isp[1])
 
     def set_mac_opener(self, mac_opener):
