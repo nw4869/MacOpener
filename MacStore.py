@@ -105,7 +105,7 @@ class MacStoreMemProxy(MacStore, Deduplicatable):
         self.cache = dict(self.mac_store.get_macs())
         self.cache_is_dirty = False
         self.loaded = True
-        return self.cache
+        return list(self.cache.items())
 
     def add_mac(self, mac, isp):
         self.mac_store.add_mac(mac, isp)

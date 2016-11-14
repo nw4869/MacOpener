@@ -120,7 +120,7 @@ def macs():
     macs = []
     for mac_isp in mac_store.get_macs():
         macs.append({'mac': mac_isp[0], 'isp': mac_isp[1]})
-    return jsonify({'macs': macs})
+    return jsonify({'count': len(macs), 'macs': macs})
 
 
 def simple(env, resp):
